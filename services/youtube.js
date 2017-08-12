@@ -103,13 +103,25 @@ module.exports = {
   /*
     upload to youtube
   */
-  upload: (filepath, params) => {
+  upload: (filepath, video) => {
+
+    let params = {
+      resource: {
+        snippet: {
+          title: video.title,
+          description: video.description
+        },
+        status: {
+          privacyStatus: 'public'
+        }
+      }
+    }
 
     let p = new Promise((resolve, reject) => {
       youtube.upload(filepath, params, (err, video) => {
         if (err) {
           console.log('upload err ', err);
-          reject(err);
+          reject(false);
         }
         resolve(video.id);
       });

@@ -5,7 +5,8 @@ let youtube = require('./modules/youtube');
 
 async function execute() {
   let downupload = await s3Service.getDownUpLoad();
-  console.log('downupload ', downupload);
+  console.log('downupload:\n\r ', downupload);
+  console.log('\n\r');
 
   switch (downupload.project.type) {
     case 'youtube':

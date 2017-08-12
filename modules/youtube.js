@@ -20,6 +20,7 @@ module.exports = async(downupload) => {
   */
   let isTokenValid = await youtubeService.isTokenValid(credential);
   console.log('isTokenValid ', isTokenValid);
+  console.log('\n\r');
 
   if (!isTokenValid) {
     let access_token = await youtubeService.refreshToken(credential);
@@ -28,58 +29,125 @@ module.exports = async(downupload) => {
   }
 
   /*
-    2.
+    2. authenticate, if failed, exit
   */
+  let authenticated = await youtubeService.authenticate(credential);
+  if (!authenticated) {
+    console.log('authenticate failed');
+    process.exit(1);
+  }
 
-
+  /*
+    3. get video list, and process each video
+  */
   let filename = downupload.configuration.file;
   let batch = downupload.configuration.batch;
 
   let videoList = await s3Service.getVideoList(filename);
   console.log('videoList ', videoList.length);
+  console.log('\n\r');
 
-  // for (let video of videoList) {
-  //   let videoId = videoList[0].videoId;
-  // }
+  let counter = 0;
 
-  let videoId = videoList[0].videoId;
+  for (let video of videoList) {
 
-  // await exec('youtube-dl -ci -f \'best\' -o \'videos/temp.%(ext)s\' https://www.youtube.com/watch?v=' + videoId);
-  if (fs.existsSync(__dirname + '/../videos/temp.mp4')) {
-    console.log('mp4!');
-    // let videoFilePath = __dirname + '/../videos/temp.mp4';
-    // let videoWithLogoFilePath = __dirname + '/../videos/temp-logo.mp4';
-    // let videoConvertedFilePath = __dirname + '/../videos/temp-logo.webm';
-    // let logFilePath = __dirname + '/../videos/logo.png';
-    // let command1 = 'ffmpeg -i ' + videoFilePath + ' -i ' + logFilePath + ' -filter_complex "overlay=main_w-overlay_w-20:main_h-overlay_h-15" ' + videoWithLogoFilePath;
-    // await exec(command1);
-    // let command2 = 'ffmpeg -fflags +genpts -i ' + videoWithLogoFilePath + ' -r 24 ' + videoConvertedFilePath
-    // await exec(command2);
-    // fs.unlinkSync(videoFilePath);
-  } else {
-    console.log('not mp4!');
-    await exec('ffmpeg -i temp.webm -i logo.png -filter_complex "overlay=main_w-overlay_w-15:main_h-overlay_h-15" temp-logo.webm');
-    await exec('ffmpeg -fflags +genpts -i temp-logo.webm -r 24 temp-logo.mp4');
+    if (counter >= batch) {
+      console.log('reached the batch size ', batch);
+      break;
+    }
+    counter++;
+
+    let videoId = video.videoId;
+    console.log('*** processing video ***');
+    console.log('videoId ', videoId);
+
+    /*
+      3.1 download video
+    */
+    console.log('--- download video');
+    let command_download = 'youtube-dl -ci -f \'best\' -o \'videos/' + videoId + '.%(ext)s\' https://www.youtube.com/watch?v=' + videoId;
+    await exec(command_download);
+
+    /*
+      3.2 add watermark and convert video format
+    */
+    let mp4VideoFilePath = __dirname + '/../videos/' + videoId + '.mp4';
+    let mp4VideoWithLogoFilePath = __dirname + '/../videos/' + videoId + '-logo.mp4';
+    let mp4VideoConvertedFilePath = __dirname + '/../videos/' + videoId + '-logo.webm';
+
+    let webmVideoFilePath = __dirname + '/../videos/' + videoId + '.webm';
+    let webmVideoWithLogoFilePath = __dirname + '/../videos/' + videoId + '-logo.webm';
+    let webmVideoConvertedFilePath = __dirname + '/../videos/' + videoId + '-logo.mp4';
+
+    let logFilePath = __dirname + '/../videos/logo.png';
+
+    let videoType;
+
+    if (fs.existsSync(mp4VideoFilePath)) {
+      console.log('--- video format: mp4 video');
+      videoType = 'mp4';
+
+      console.log('--- add watermark');
+      let command_watermark = 'ffmpeg -i ' + mp4VideoFilePath + ' -i ' + logFilePath + ' -filter_complex "overlay=main_w-overlay_w-20:main_h-overlay_h-15" ' + mp4VideoWithLogoFilePath;
+      await exec(command_watermark);
+
+      console.log('--- convert video');
+      let command_convert = 'ffmpeg -fflags +genpts -i ' + mp4VideoWithLogoFilePath + ' -r 24 ' + mp4VideoConvertedFilePath;
+      await exec(command_convert);
+
+    } else if (fs.existsSync(webmVideoFilePath)) {
+      console.log('--- video format: webm video');
+      videoType = 'webm';
+
+      console.log('--- add watermark');
+      let command_watermark = 'ffmpeg -i ' + webmVideoFilePath + ' -i ' + logFilePath + ' -filter_complex "overlay=main_w-overlay_w-20:main_h-overlay_h-15" ' + webmVideoWithLogoFilePath;
+      await exec(command_watermark);
+
+      console.log('--- convert video');
+      let command_convert = 'ffmpeg -fflags +genpts -i ' + webmVideoWithLogoFilePath + ' -r 24 ' + webmVideoConvertedFilePath;
+      await exec(command_convert);
+
+    } else {
+      console.log('unknown file extension');
+      continue;
+    }
+
+    /*
+      3.3 upload to youtube (if target type is playlist, then add the video to playlist)
+    */
+    console.log('--- upload video');
+    let uploadVideoFilePath;
+    if (videoType == 'mp4') {
+      uploadVideoFilePath = './videos/' + videoId + '-logo.webm';
+    } else if (videoType == 'webm') {
+      uploadVideoFilePath = './videos/' + videoId + '-logo.mp4';
+    }
+    let uploadedVideoId = await youtubeService.upload(uploadVideoFilePath, video);
+    console.log('uploadedVideoId ', uploadedVideoId);
+
+    if (!uploadedVideoId) {
+      break;
+    }
+
+    if (video.targetType == 'playlist') {
+      console.log('--- add video to playlist');
+      let playlistAdded = await youtubeService.addToPlaylist(credential, video.targetId, uploadedVideoId);
+      console.log('playlistAdded ', playlistAdded);
+    }
   }
 
-  // let authenticated = await youtubeService.authenticate(credential);
-  // console.log('authenticated ', authenticated);
-  //
-  // var params = {
-  //   resource: {
-  //     snippet: {
-  //       title: 'trump!!!',
-  //       description: 'trump video uploaded via the YouTube API'
-  //     },
-  //     status: {
-  //       privacyStatus: 'public'
-  //     }
-  //   }
-  // }
-  // let uploadedVideoId = await youtubeService.upload('./videos/temp-logo.webm', params);
-  // console.log('uploadedVideoId ', uploadedVideoId);
-  //
-  // let playlistAdded = await youtubeService.addToPlaylist(credential, 'PLIPOJGlufsbVXLSBoM_utjoiAD93V4c63', uploadedVideoId);
-  // console.log('playlistAdded ', playlistAdded);
+  /*
+    4. removed the uploaded videos from video list, and overwrite the video list file in s3
+  */
+  console.log('\n\r');
+  console.log('*** out of for loop ***');
+  console.log('--- batch ', batch);
+  console.log('--- counter ', counter);
+
+  videoList = videoList.splice(counter, videoList.length - counter);
+  console.log('videoList new length ', videoList.length);
+
+  let uploaded = await s3Service.uploadVideoList(videoList, filename);
+  console.log('uploaded ', uploaded);
 
 }

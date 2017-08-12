@@ -49,4 +49,33 @@ module.exports = {
 
     return p;
   },
+
+  /*
+  upload video list to s3
+*/
+  uploadVideoList: (videoList, filename) => {
+
+    let project = process.env.PROJECT_NAME;
+    let key = `${project}/${filename}`;
+
+    let body = JSON.stringify(videoList);
+
+    let params = {
+      Bucket: process.env.S3_BUCKET,
+      Key: key,
+      Body: body,
+      ContentType: 'application/json'
+    }
+
+    let p = new Promise((resolve, reject) => {
+      s3.putObject(params, (err, data) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(true);
+      });
+    });
+
+    return p;
+  }
 }
