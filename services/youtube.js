@@ -3,12 +3,12 @@
 let _ = require('lodash');
 let request = require('request');
 
-// let YouTube = require('youtube-video-api');
-// let youtube = YouTube({
-//   video: {
-//     part: 'status,snippet'
-//   }
-// });
+let YouTube = require('youtube-video-api');
+let youtube = YouTube({
+  video: {
+    part: 'status,snippet'
+  }
+});
 
 module.exports = {
   /*
@@ -81,4 +81,85 @@ module.exports = {
 
     return p;
   },
+
+  /*
+    authenticate youtube upload service
+  */
+  authenticate: (credential) => {
+
+    let p = new Promise((resolve, reject) => {
+      youtube.authenticate(credential.client_id, credential.client_secret, (err, tokens) => {
+        if (err) {
+          console.log('authenticate err ', err);
+          reject(err);
+        }
+        resolve(true);
+      });
+    });
+
+    return p;
+  },
+
+  /*
+    upload to youtube
+  */
+  upload: (filepath, params) => {
+
+    let p = new Promise((resolve, reject) => {
+      youtube.upload(filepath, params, (err, video) => {
+        if (err) {
+          console.log('upload err ', err);
+          reject(err);
+        }
+        resolve(video.id);
+      });
+    });
+
+    return p;
+  },
+
+  /*
+    add video to a playlist
+  */
+  addToPlaylist: (credential, playlistId, videoId) => {
+
+    let body = {
+      "snippet": {
+        "playlistId": playlistId,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": videoId
+        }
+      }
+    };
+
+    let options = {
+      url: 'https://www.googleapis.com/youtube/v3/playlistItems',
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + credential.access_token
+      },
+      qs: {
+        part: 'snippet'
+      },
+      json: body
+    };
+
+    let p = new Promise((resolve, reject) => {
+      request(options, (err, response, body) => {
+        if (err) {
+          console.log('request err ', err);
+          reject(err);
+        }
+        let bodyString = JSON.stringify(response.body);
+        if (bodyString.indexOf('error') > -1) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+
+    return p;
+  }
 }
