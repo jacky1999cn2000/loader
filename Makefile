@@ -1,6 +1,9 @@
 IMAGE=jacky1999cn2000/loader
 GIT_HASH=$(shell git rev-parse --short HEAD)
 
+upload:
+	aws s3 cp ./config/downupload.json s3://youtube-farming/test/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+
 install:
 	docker run -i --rm --name install -v `pwd`:/usr/src/app -w /usr/src/app node:8 npm install
 

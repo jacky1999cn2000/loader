@@ -1,0 +1,13 @@
+{
+  "project":{
+    "email":"liang.zhao.sfdc01@gmail.com",
+    "channelUrl":"https://www.youtube.com/channel/project1",
+    "channelName":"project1",
+    "description":"this is a test project",
+    "type":"youtube"
+  },
+  "configuration":{
+    "file":"2017-8-12.json",
+    "batch":"5"
+  }
+}
