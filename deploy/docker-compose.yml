@@ -1,0 +1,11 @@
+version: '2'
+services:
+  test:
+    build: jacky1999cn2000/loader:latest
+    environment:
+      S3_BUCKET: "youtube-farming"
+      PROJECT_NAME: "test"
+      EMAIL_ACCOUNT: "liang.zhao.sfdc01@gmail.com"
+      EMAIL_PASSWORD: "GoogleStory123!@#"
+    working_dir: "/usr/src/app"
+    entrypoint: "forever index.js"
