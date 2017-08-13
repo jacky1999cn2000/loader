@@ -99,11 +99,15 @@ module.exports = async(downupload) => {
 
       mailService.addLog('adding watermark', false);
       let command_watermark = 'ffmpeg -i ' + mp4VideoFilePath + ' -i ' + logFilePath + ' -filter_complex "overlay=main_w-overlay_w-20:main_h-overlay_h-15" ' + mp4VideoWithLogoFilePath;
+      console.log('command_watermark ', command_watermark);
       await exec(command_watermark);
+      console.log('watermark done');
 
       mailService.addLog('converting video', false);
       let command_convert = 'ffmpeg -fflags +genpts -i ' + mp4VideoWithLogoFilePath + ' -r 24 ' + mp4VideoConvertedFilePath;
+      console.log('command_convert ', command_convert);
       await exec(command_convert);
+      console.log('converting done');
 
     } else if (fs.existsSync(webmVideoFilePath)) {
 
@@ -127,6 +131,7 @@ module.exports = async(downupload) => {
       3.3. check if current access_token is still valid, if not, use refresh_token to get new access_token, write it to credential file, and re-authenticate (necessary since the prior 2 steps might take a long time, and access_token is valid for 1 hour)
     */
     let isTokenValid = await youtubeService.isTokenValid(credential);
+    console.log('token still valid? ', isTokenValid);
     mailService.addLog('token still valid: ' + isTokenValid, false);
 
     if (!isTokenValid) {
@@ -135,7 +140,11 @@ module.exports = async(downupload) => {
       jsonfile.writeFileSync('./.google-oauth2-credentials.json', credential);
       mailService.addLog('refresh token', false);
 
+      console.log('refreshed token');
+
       let authenticated = await youtubeService.authenticate(credential);
+      console.log('authenticated ', authenticated);
+
       if (!authenticated) {
         mailService.addLog('authenticate failed', true);
         await mailService.sendMail();
@@ -146,6 +155,7 @@ module.exports = async(downupload) => {
     /*
       3.4 upload to youtube (if target type is playlist, then add the video to playlist)
     */
+    console.log('uploading video');
     mailService.addLog('uploading video', false);
     let uploadVideoFilePath;
     if (videoType == 'mp4') {
@@ -154,6 +164,7 @@ module.exports = async(downupload) => {
       uploadVideoFilePath = './videos/' + videoId + '-logo.mp4';
     }
     let uploadedVideoId = await youtubeService.upload(uploadVideoFilePath, video);
+    console.log('uploadedVideoId ', uploadedVideoId);
 
     if (!uploadedVideoId) {
       mailService.addLog('uploading video failed', false, true);

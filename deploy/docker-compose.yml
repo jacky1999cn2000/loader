@@ -1,7 +1,7 @@
 version: '2'
 services:
   test:
-    build: jacky1999cn2000/loader:latest
+    image: jacky1999cn2000/loader:latest
     environment:
       S3_BUCKET: "youtube-farming"
       PROJECT_NAME: "test"
