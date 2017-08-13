@@ -1,5 +1,0 @@
-commit aa998fcb14fed41c365f76ad71cd400006181ec1
-Author: Jacky Zhao <liang.zhao83@gmail.com>
-Date:   Sat Aug 12 21:35:01 2017 -0700
-
-    docker-compose file for production
