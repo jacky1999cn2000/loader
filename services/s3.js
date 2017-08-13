@@ -70,7 +70,7 @@ module.exports = {
     let p = new Promise((resolve, reject) => {
       s3.putObject(params, (err, data) => {
         if (err) {
-          reject(err);
+          reject(false);
         }
         resolve(true);
       });

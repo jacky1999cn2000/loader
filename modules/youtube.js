@@ -6,7 +6,7 @@ let jsonfile = require('jsonfile');
 
 let s3Service = require('../services/s3');
 let youtubeService = require('../services/youtube');
-
+let mailService = require('../services/mail');
 
 let util = require('util');
 let exec = util.promisify(require('child_process').exec);
@@ -15,17 +15,19 @@ let credential = require('../.google-oauth2-credentials.json');
 
 module.exports = async(downupload) => {
 
+  mailService.addLog('downupload: ' + JSON.stringify(downupload), true);
+
   /*
     1. if current access_token not valid, then use refresh_token to get new access_token and write it to credential file
   */
   let isTokenValid = await youtubeService.isTokenValid(credential);
-  console.log('isTokenValid ', isTokenValid);
-  console.log('\n\r');
+  mailService.addLog('Is token valid: ' + isTokenValid, true);
 
   if (!isTokenValid) {
     let access_token = await youtubeService.refreshToken(credential);
     credential.access_token = access_token;
     jsonfile.writeFileSync('./.google-oauth2-credentials.json', credential);
+    mailService.addLog('refresh token', true);
   }
 
   /*
@@ -33,8 +35,9 @@ module.exports = async(downupload) => {
   */
   let authenticated = await youtubeService.authenticate(credential);
   if (!authenticated) {
-    console.log('authenticate failed');
-    process.exit(1);
+    mailService.addLog('authenticate failed', true);
+    await mailService.sendMail();
+    process.exit();
   }
 
   /*
@@ -44,29 +47,27 @@ module.exports = async(downupload) => {
   let batch = downupload.configuration.batch;
 
   let videoList = await s3Service.getVideoList(filename);
-  console.log('videoList ', videoList.length);
-  console.log('\n\r');
+  mailService.addLog('video list length: ' + videoList.length, true);
 
   let counter = 0;
 
   for (let video of videoList) {
 
     if (counter >= batch) {
-      console.log('reached the batch size ', batch);
+      mailService.addLog('reached batch size: ' + batch, true);
       break;
     }
     counter++;
 
     let videoId = video.videoId;
-    console.log('*** processing video ***');
-    console.log('videoId ', videoId);
+    mailService.addLog('processing video: ' + videoId, true);
 
     /*
       3.1 download video
     */
-    console.log('--- download video');
     let command_download = 'youtube-dl -ci -f \'best\' -o \'videos/' + videoId + '.%(ext)s\' https://www.youtube.com/watch?v=' + videoId;
     await exec(command_download);
+    mailService.addLog('downloaded video', false);
 
     /*
       3.2 add watermark and convert video format
@@ -84,38 +85,40 @@ module.exports = async(downupload) => {
     let videoType;
 
     if (fs.existsSync(mp4VideoFilePath)) {
-      console.log('--- video format: mp4 video');
-      videoType = 'mp4';
 
-      console.log('--- add watermark');
+      videoType = 'mp4';
+      mailService.addLog('video type: ' + videoType, false);
+
+      mailService.addLog('adding watermark', false);
       let command_watermark = 'ffmpeg -i ' + mp4VideoFilePath + ' -i ' + logFilePath + ' -filter_complex "overlay=main_w-overlay_w-20:main_h-overlay_h-15" ' + mp4VideoWithLogoFilePath;
       await exec(command_watermark);
 
-      console.log('--- convert video');
+      mailService.addLog('converting video', false);
       let command_convert = 'ffmpeg -fflags +genpts -i ' + mp4VideoWithLogoFilePath + ' -r 24 ' + mp4VideoConvertedFilePath;
       await exec(command_convert);
 
     } else if (fs.existsSync(webmVideoFilePath)) {
-      console.log('--- video format: webm video');
-      videoType = 'webm';
 
-      console.log('--- add watermark');
+      videoType = 'webm';
+      mailService.addLog('video type: ' + videoType, false);
+
+      mailService.addLog('adding watermark', false);
       let command_watermark = 'ffmpeg -i ' + webmVideoFilePath + ' -i ' + logFilePath + ' -filter_complex "overlay=main_w-overlay_w-20:main_h-overlay_h-15" ' + webmVideoWithLogoFilePath;
       await exec(command_watermark);
 
-      console.log('--- convert video');
+      mailService.addLog('converting video', false);
       let command_convert = 'ffmpeg -fflags +genpts -i ' + webmVideoWithLogoFilePath + ' -r 24 ' + webmVideoConvertedFilePath;
       await exec(command_convert);
 
     } else {
-      console.log('unknown file extension');
+      mailService.addLog('unknown file extension', false);
       continue;
     }
 
     /*
       3.3 upload to youtube (if target type is playlist, then add the video to playlist)
     */
-    console.log('--- upload video');
+    mailService.addLog('uploading video', false);
     let uploadVideoFilePath;
     if (videoType == 'mp4') {
       uploadVideoFilePath = './videos/' + videoId + '-logo.webm';
@@ -123,31 +126,38 @@ module.exports = async(downupload) => {
       uploadVideoFilePath = './videos/' + videoId + '-logo.mp4';
     }
     let uploadedVideoId = await youtubeService.upload(uploadVideoFilePath, video);
-    console.log('uploadedVideoId ', uploadedVideoId);
 
     if (!uploadedVideoId) {
+      mailService.addLog('uploading video failed', false, true);
       break;
     }
 
     if (video.targetType == 'playlist') {
-      console.log('--- add video to playlist');
+      mailService.addLog('adding video to playlist', false);
       let playlistAdded = await youtubeService.addToPlaylist(credential, video.targetId, uploadedVideoId);
-      console.log('playlistAdded ', playlistAdded);
+      if (!playlistAdded) {
+        mailService.addLog('adding video to playlist failed', false, true);
+      }
     }
   }
 
   /*
     4. removed the uploaded videos from video list, and overwrite the video list file in s3
   */
-  console.log('\n\r');
-  console.log('*** out of for loop ***');
-  console.log('--- batch ', batch);
-  console.log('--- counter ', counter);
+  mailService.addLog('out of for loop', true);
+  mailService.addLog('batch ' + batch, false);
+  mailService.addLog('counter ' + counter, false);
 
   videoList = videoList.splice(counter, videoList.length - counter);
-  console.log('videoList new length ', videoList.length);
+
+  mailService.addLog('video list new length: ' + videoList.length, true);
+  mailService.addLog('writing new video list to s3 ', true);
 
   let uploaded = await s3Service.uploadVideoList(videoList, filename);
-  console.log('uploaded ', uploaded);
+  if (!uploaded) {
+    mailService.addLog('writing new video list to s3 failed', false, true);
+  }
+
+  await mailService.sendMail();
 
 }
