@@ -1,0 +1,7 @@
+commit 00e59d7ed8015e2b6364aa146d461857e0ea318d
+Author: Jacky Zhao <liang.zhao83@gmail.com>
+Date:   Sun Aug 13 00:16:46 2017 -0700
+
+    Revert "adding logs"
+    
+    This reverts commit ffc94c9107f12ccae7c11a8a0ca3a8f8365aaf6f.
