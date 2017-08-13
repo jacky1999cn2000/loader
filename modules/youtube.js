@@ -15,10 +15,17 @@ let credential = require('../.google-oauth2-credentials.json');
 
 module.exports = async(downupload) => {
 
-  mailService.addLog('downupload: ' + JSON.stringify(downupload), true);
+  mailService.addLog('PROJECT INFORMATION', true);
+  mailService.addLog('email: ' + downupload.project.email, false);
+  mailService.addLog('channelUrl: ' + downupload.project.channelUrl, false);
+  mailService.addLog('channelName: ' + downupload.project.channelName, false);
+  mailService.addLog('description: ' + downupload.project.description, false);
+  mailService.addLog('type: ' + downupload.project.type, false);
+  mailService.addLog('file: ' + downupload.configuration.file, false);
+  mailService.addLog('batch: ' + downupload.configuration.batch, false);
 
   /*
-    1. if current access_token not valid, then use refresh_token to get new access_token and write it to credential file
+    1. check if current access_token is still valid, if not, use refresh_token to get new access_token and write it to credential file
   */
   let isTokenValid = await youtubeService.isTokenValid(credential);
   mailService.addLog('Is token valid: ' + isTokenValid, true);
@@ -60,7 +67,8 @@ module.exports = async(downupload) => {
     counter++;
 
     let videoId = video.videoId;
-    mailService.addLog('processing video: ' + videoId, true);
+    mailService.addLog('processing video', true);
+    mailService.addLog('video id: ' + videoId, false);
 
     /*
       3.1 download video
@@ -116,7 +124,27 @@ module.exports = async(downupload) => {
     }
 
     /*
-      3.3 upload to youtube (if target type is playlist, then add the video to playlist)
+      3.3. check if current access_token is still valid, if not, use refresh_token to get new access_token, write it to credential file, and re-authenticate (necessary since the prior 2 steps might take a long time, and access_token is valid for 1 hour)
+    */
+    let isTokenValid = await youtubeService.isTokenValid(credential);
+    mailService.addLog('token still valid: ' + isTokenValid, false);
+
+    if (!isTokenValid) {
+      let access_token = await youtubeService.refreshToken(credential);
+      credential.access_token = access_token;
+      jsonfile.writeFileSync('./.google-oauth2-credentials.json', credential);
+      mailService.addLog('refresh token', false);
+
+      let authenticated = await youtubeService.authenticate(credential);
+      if (!authenticated) {
+        mailService.addLog('authenticate failed', true);
+        await mailService.sendMail();
+        process.exit();
+      }
+    }
+
+    /*
+      3.4 upload to youtube (if target type is playlist, then add the video to playlist)
     */
     mailService.addLog('uploading video', false);
     let uploadVideoFilePath;

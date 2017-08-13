@@ -5,8 +5,8 @@ let nodemailer = require('nodemailer');
 let transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'liang.zhao.sfdc01@gmail.com', //process.env.EMAIL_ACCOUNT,
-    pass: 'GoogleStory123!@#' //process.env.EMAIL_PASSWORD
+    user: process.env.EMAIL_ACCOUNT,
+    pass: process.env.EMAIL_PASSWORD
   }
 });
 
@@ -18,7 +18,7 @@ module.exports = {
     if (newline) {
       console.log('\n\r');
       console.log('*** ', log, ' ***');
-      content += os.EOL + '*** ' + log + ' ***' + os.EOL;
+      content += os.EOL + os.EOL + '*** ' + log + ' ***';
     } else {
       if (error) {
         console.log('######### ', log, '########');
