@@ -1,5 +1,5 @@
-commit fca6821d6c1642bc69857d9e588d879cddb645bc
+commit e0decccb9251f6ccb06526890e4cbc504647e697
 Author: Jacky Zhao <liang.zhao83@gmail.com>
-Date:   Sun Aug 13 00:34:22 2017 -0700
+Date:   Sun Aug 13 14:42:17 2017 -0700
 
-    fix typo
+    refactor mail.js
