@@ -1,14 +1,17 @@
 'use strict';
 
-let os = require("os");
+let os = require('os');
+let fs = require('fs');
 let nodemailer = require('nodemailer');
-let transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_ACCOUNT,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+let ses = require('nodemailer-ses-transport');
+
+let awsCrendential = fs.readFileSync('/root/.aws/credentials', 'utf-8');
+
+let transporter = nodemailer.createTransport(ses({
+  accessKeyId: awsCrendential.aws_access_key_id,
+  secretAccessKey: awsCrendential.aws_secret_access_key,
+  region: 'us-west-2'
+}));
 
 let content = '';
 
@@ -32,9 +35,9 @@ module.exports = {
 
   sendMail: () => {
     let options = {
-      from: 'liang.zhao.sfdc01@gmail.com',
-      to: 'liang.zhao83@gmail.com',
-      subject: 'Sending Email using Node.js',
+      from: process.env.EMAIL_ACCOUNT,
+      to: process.env.EMAIL_ACCOUNT,
+      subject: 'JOB FINISHED FOR PROJECT: ' + process.env.PROJECT_NAME,
       text: content
     };
 
@@ -44,7 +47,7 @@ module.exports = {
           console.log('send mail err ', err);
           reject(false);
         }
-        console.log('response ', info.response);
+        console.log('response ', info);
         resolve(true);
       });
     });

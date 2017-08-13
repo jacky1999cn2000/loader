@@ -1,7 +1,5 @@
-commit 00e59d7ed8015e2b6364aa146d461857e0ea318d
+commit fca6821d6c1642bc69857d9e588d879cddb645bc
 Author: Jacky Zhao <liang.zhao83@gmail.com>
-Date:   Sun Aug 13 00:16:46 2017 -0700
+Date:   Sun Aug 13 00:34:22 2017 -0700
 
-    Revert "adding logs"
-    
-    This reverts commit ffc94c9107f12ccae7c11a8a0ca3a8f8365aaf6f.
+    fix typo
