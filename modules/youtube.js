@@ -3,13 +3,11 @@
 let _ = require('lodash');
 let fs = require('fs');
 let jsonfile = require('jsonfile');
+let spawnSync = require('child_process').spawnSync;
 
 let s3Service = require('../services/s3');
 let youtubeService = require('../services/youtube');
 let mailService = require('../services/mail');
-
-let util = require('util');
-let exec = util.promisify(require('child_process').exec);
 
 let credential = require('../.google-oauth2-credentials.json');
 
@@ -70,26 +68,34 @@ module.exports = async(downupload) => {
     mailService.addLog('processing video', true);
     mailService.addLog('video id: ' + videoId, false);
 
+    // TODO: remove it later
+    // if(process.env.RUNNING_ENVIRONMENT == 'local'){
+    //   continue;
+    // }
+
+    let mp4VideoFilePath = __dirname + '/../videos/' + videoId + '.mp4';
+    let mp4VideoConvertedFilePath = __dirname + '/../videos/' + videoId + '.webm';
+
+    let webmVideoFilePath = __dirname + '/../videos/' + videoId + '.webm';
+    let webmVideoConvertedFilePath = __dirname + '/../videos/' + videoId + '.mp4';
+
+    /*
+      3.0 check if the file has already been processed (forever would resume nodejs after crash, so if the file has already processed, skip it)
+    */
+    if (fs.existsSync(mp4VideoFilePath) || fs.existsSync(webmVideoFilePath)) {
+      mailService.addLog('already processed', false);
+      continue;
+    }
+
     /*
       3.1 download video
     */
-    let command_download = 'youtube-dl -ci -f \'best\' -o \'videos/' + videoId + '.%(ext)s\' https://www.youtube.com/watch?v=' + videoId;
-    await exec(command_download);
+    spawnSync('youtube-dl', ['-ci', '-f', 'best', '-o', 'videos/' + videoId + '.%(ext)s', 'https://www.youtube.com/watch?v=' + videoId]);
     mailService.addLog('downloaded video', false);
 
     /*
-      3.2 add watermark and convert video format
+      3.2 convert video format
     */
-    let mp4VideoFilePath = __dirname + '/../videos/' + videoId + '.mp4';
-    let mp4VideoWithLogoFilePath = __dirname + '/../videos/' + videoId + '-logo.mp4';
-    let mp4VideoConvertedFilePath = __dirname + '/../videos/' + videoId + '-logo.webm';
-
-    let webmVideoFilePath = __dirname + '/../videos/' + videoId + '.webm';
-    let webmVideoWithLogoFilePath = __dirname + '/../videos/' + videoId + '-logo.webm';
-    let webmVideoConvertedFilePath = __dirname + '/../videos/' + videoId + '-logo.mp4';
-
-    let logFilePath = __dirname + '/../videos/logo.png';
-
     let videoType;
 
     if (fs.existsSync(mp4VideoFilePath)) {
@@ -97,26 +103,16 @@ module.exports = async(downupload) => {
       videoType = 'mp4';
       mailService.addLog('video type: ' + videoType, false);
 
-      mailService.addLog('adding watermark', false);
-      let command_watermark = 'ffmpeg -i ' + mp4VideoFilePath + ' -i ' + logFilePath + ' -filter_complex "overlay=main_w-overlay_w-20:main_h-overlay_h-15" ' + mp4VideoWithLogoFilePath;
-      await exec(command_watermark);
-
       mailService.addLog('converting video', false);
-      let command_convert = 'ffmpeg -fflags +genpts -i ' + mp4VideoWithLogoFilePath + ' -r 24 ' + mp4VideoConvertedFilePath;
-      await exec(command_convert);
+      spawnSync('ffmpeg', ['-fflags', '+genpts', '-i', mp4VideoFilePath, '-r', '24', mp4VideoConvertedFilePath]);
 
     } else if (fs.existsSync(webmVideoFilePath)) {
 
       videoType = 'webm';
       mailService.addLog('video type: ' + videoType, false);
 
-      mailService.addLog('adding watermark', false);
-      let command_watermark = 'ffmpeg -i ' + webmVideoFilePath + ' -i ' + logFilePath + ' -filter_complex "overlay=main_w-overlay_w-20:main_h-overlay_h-15" ' + webmVideoWithLogoFilePath;
-      await exec(command_watermark);
-
       mailService.addLog('converting video', false);
-      let command_convert = 'ffmpeg -fflags +genpts -i ' + webmVideoWithLogoFilePath + ' -r 24 ' + webmVideoConvertedFilePath;
-      await exec(command_convert);
+      spawnSync('ffmpeg', ['-fflags', '+genpts', '-i', webmVideoFilePath, '-r', '24', webmVideoConvertedFilePath]);
 
     } else {
       mailService.addLog('unknown file extension', false);
@@ -149,9 +145,9 @@ module.exports = async(downupload) => {
     mailService.addLog('uploading video', false);
     let uploadVideoFilePath;
     if (videoType == 'mp4') {
-      uploadVideoFilePath = './videos/' + videoId + '-logo.webm';
+      uploadVideoFilePath = './videos/' + videoId + '.webm';
     } else if (videoType == 'webm') {
-      uploadVideoFilePath = './videos/' + videoId + '-logo.mp4';
+      uploadVideoFilePath = './videos/' + videoId + '.mp4';
     }
     let uploadedVideoId = await youtubeService.upload(uploadVideoFilePath, video);
 
