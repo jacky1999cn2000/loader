@@ -53,7 +53,6 @@ module.exports = {
     use refresh_token to get new access_token
   */
   refreshToken: (credential) => {
-
     let options = {
       url: 'https://www.googleapis.com/oauth2/v4/token',
       method: 'POST',

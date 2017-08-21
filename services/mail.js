@@ -3,25 +3,14 @@
 let os = require('os');
 let fs = require('fs');
 let nodemailer = require('nodemailer');
-let ses = require('nodemailer-ses-transport');
 
-let transporter;
-
-if (process.env.RUNNING_ENVIRONMENT == 'local') {
-  let awsCrendential = fs.readFileSync('/root/.aws/credentials', 'utf-8');
-  transporter = nodemailer.createTransport(ses({
-    accessKeyId: awsCrendential.aws_access_key_id,
-    secretAccessKey: awsCrendential.aws_secret_access_key,
-    region: 'us-west-2'
-  }));
-} else {
-  transporter = nodemailer.createTransport(ses({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
-    region: 'us-west-2'
-  }));
-}
-
+let transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_ACCOUNT,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
 
 let content = '';
 
@@ -45,9 +34,9 @@ module.exports = {
 
   sendMail: () => {
     let options = {
-      from: process.env.NOTIFICATION_EMAIL,
-      to: process.env.NOTIFICATION_EMAIL,
-      subject: 'JOB FINISHED FOR PROJECT: ' + process.env.PROJECT_NAME,
+      from: process.env.EMAIL_ACCOUNT,
+      to: 'liang.zhao83@gmail.com',
+      subject: 'JOB FINISHED',
       text: content
     };
 

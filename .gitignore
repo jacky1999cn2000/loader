@@ -1,4 +1,5 @@
 node_modules
-deploy
 videos
+config
 .google-oauth2-credentials.json
+docker-compose.yml

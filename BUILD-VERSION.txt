@@ -1,5 +1,5 @@
-commit d2be327ae024e9cff361b6ba6bf83f02211f2b5c
+commit fe5f561a2d4eec1c00e5ddade9340450dc8b5e56
 Author: Jacky Zhao <liang.zhao83@gmail.com>
-Date:   Sun Aug 13 15:13:18 2017 -0700
+Date:   Sun Aug 13 22:34:46 2017 -0700
 
-    refactor mail.js
+    use spawn instead of exec, also remove adding watermark

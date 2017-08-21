@@ -1,19 +1,34 @@
 'use strict';
 
-let s3Service = require('./services/s3');
-let youtube = require('./modules/youtube');
+let uploader = require('./upload/uploader');
+let youtube = require('./process/youtube');
 
 async function execute() {
-  let downupload = await s3Service.getDownUpLoad();
-  console.log('downupload:\n\r ', downupload);
+
+  let settings = require('./config/settings');
+  console.log('settings ', settings);
   console.log('\n\r');
 
-  switch (downupload.project.type) {
-    case 'youtube':
-      youtube(downupload);
-      break;
-    default:
-      console.log('unknown type: ', manifest.project.type);
+  let manifest = require('./config/' + settings.target);
+  console.log('manifest ', manifest);
+  console.log('\n\r');
+
+  if (settings.task == 'process') {
+
+    switch (manifest.project.type) {
+      case 'youtube':
+        youtube(manifest);
+        break;
+      default:
+        console.log('unknown type: ', manifest.project.type);
+    }
+
+  } else if (settings.task == 'upload') {
+
+    uploader(manifest);
+
+  } else {
+    console.log('unknown task ', settings.task);
   }
 
 };

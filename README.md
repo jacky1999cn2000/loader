@@ -17,3 +17,5 @@ chmod +x /usr/local/bin/docker-compose
 exit
 exit
 scp -i ~/.ssh/aws-635795671316.pem docker-compose-prod.yml ec2-user@[public ip]:~/docker-compose.yml
+
+docker exec -it 8129711e88d7 /bin/bash
