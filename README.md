@@ -13,4 +13,4 @@
     * target: indicate which manifest file to load for process
     * task: indicate which task to perform (values: process or upload)
   * manifest files
-    * [youtube](https://github.com/jacky1999cn2000/youtuber/blob/master/notes/youtube.md)
+    * [youtube](https://github.com/jacky1999cn2000/loader/blob/master/notes/youtube.md)
