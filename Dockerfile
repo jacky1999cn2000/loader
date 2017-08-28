@@ -10,7 +10,7 @@ RUN wget https://yt-dl.org/downloads/latest/youtube-dl -O /usr/local/bin/youtube
 #install ffmpeg
 RUN mkdir /ffmpeg && \
     cd /ffmpeg && \
-    wget http://johnvansickle.com/ffmpeg/builds/ffmpeg-git-64bit-static.tar.xz && \
+    wget --no-check-certificate http://johnvansickle.com/ffmpeg/builds/ffmpeg-git-64bit-static.tar.xz && \
     tar xf ffmpeg-git-64bit-static.tar.xz && \
     cd ./ffmpeg* && \
     mv * ../ && \
