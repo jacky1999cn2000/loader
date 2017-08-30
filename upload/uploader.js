@@ -22,9 +22,9 @@ module.exports = async(manifest) => {
   mailService.addLog('channelName: ' + manifest.project.channelName, false);
   mailService.addLog('description: ' + manifest.project.description, false);
   mailService.addLog('type: ' + manifest.project.type, false);
-  mailService.addLog('file: ' + manifest.download.file, false);
-  mailService.addLog('date: ' + manifest.download.date, false);
-  mailService.addLog('batch: ' + manifest.download.batch, false);
+  mailService.addLog('file: ' + manifest.upload.file, false);
+  mailService.addLog('date: ' + manifest.upload.date, false);
+  mailService.addLog('batch: ' + manifest.upload.batch, false);
 
   /*
     0. get credential from manifest, and write it to ./google-oauth2-credentials.json file (will be used for upload)
@@ -58,9 +58,9 @@ module.exports = async(manifest) => {
   /*
     3. get video list, and upload each video
   */
-  let date = manifest.download.date;
-  let filename = manifest.download.file;
-  let batch = manifest.download.batch;
+  let date = manifest.upload.date;
+  let filename = manifest.upload.file;
+  let batch = manifest.upload.batch;
 
   let videoList = await s3Service.getVideoList(manifest.project.type, manifest.project.channelName, date, filename);
   let unUploadedVideoList = _.filter(videoList, (item) => {

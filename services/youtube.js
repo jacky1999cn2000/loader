@@ -35,13 +35,14 @@ module.exports = {
         if (err) {
           console.log('request err ', err);
           reject(err);
-        }
-        let bodyJson = JSON.parse(response.body)
-
-        if (bodyJson.error && bodyJson.error.message && bodyJson.error.message == 'Invalid Credentials') {
-          resolve(false);
         } else {
-          resolve(true);
+          let bodyJson = JSON.parse(response.body)
+
+          if (bodyJson.error && bodyJson.error.message && bodyJson.error.message == 'Invalid Credentials') {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
         }
       });
     });
@@ -72,9 +73,10 @@ module.exports = {
         if (err) {
           console.log('request err ', err);
           reject(err);
+        } else {
+          let bodyJson = JSON.parse(response.body)
+          resolve(bodyJson.access_token);
         }
-        let bodyJson = JSON.parse(response.body)
-        resolve(bodyJson.access_token);
       });
     });
 
@@ -90,9 +92,10 @@ module.exports = {
       youtube.authenticate(credential.client_id, credential.client_secret, (err, tokens) => {
         if (err) {
           console.log('authenticate err ', err);
-          reject(err);
+          reject(false);
+        } else {
+          resolve(true);
         }
-        resolve(true);
       });
     });
 
@@ -121,8 +124,9 @@ module.exports = {
         if (err) {
           console.log('upload err ', err);
           reject(false);
+        } else {
+          resolve(video.id);
         }
-        resolve(video.id);
       });
     });
 
@@ -160,13 +164,14 @@ module.exports = {
       request(options, (err, response, body) => {
         if (err) {
           console.log('request err ', err);
-          reject(err);
-        }
-        let bodyString = JSON.stringify(response.body);
-        if (bodyString.indexOf('error') > -1) {
-          resolve(false);
+          reject(false);
         } else {
-          resolve(true);
+          let bodyString = JSON.stringify(response.body);
+          if (bodyString.indexOf('error') > -1) {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
         }
       });
     });
