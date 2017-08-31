@@ -45,7 +45,7 @@ module.exports = {
       Bucket: process.env.S3_BUCKET,
       Key: key,
       Body: body,
-      ContentType: 'application/json'
+      ContentType: 'application/json;charset=utf-8'
     }
 
     let p = new Promise((resolve, reject) => {
