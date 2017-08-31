@@ -92,7 +92,7 @@ module.exports = {
       youtube.authenticate(credential.client_id, credential.client_secret, (err, tokens) => {
         if (err) {
           console.log('authenticate err ', err);
-          reject(false);
+          resolve(false);
         } else {
           resolve(true);
         }
@@ -123,7 +123,7 @@ module.exports = {
       youtube.upload(filepath, params, (err, video) => {
         if (err) {
           console.log('upload err ', err);
-          reject(false);
+          resolve(false);
         } else {
           resolve(video.id);
         }
@@ -164,7 +164,7 @@ module.exports = {
       request(options, (err, response, body) => {
         if (err) {
           console.log('request err ', err);
-          reject(false);
+          resolve(false);
         } else {
           let bodyString = JSON.stringify(response.body);
           if (bodyString.indexOf('error') > -1) {
