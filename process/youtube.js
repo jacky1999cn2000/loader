@@ -141,13 +141,17 @@ module.exports = async(manifest) => {
 
         mailService.addLog('video type: mp4', false);
         mailService.addLog('converting video', false);
-        spawnSync('ffmpeg', ['-fflags', '+genpts', '-i', mp4VideoFilePath, '-r', '24', mp4VideoConvertedFilePath]);
+        spawnSync('ffmpeg', ['-fflags', '+genpts', '-i', mp4VideoFilePath, '-r', '24', mp4VideoConvertedFilePath], {
+          timeout: 300000
+        });
 
       } else if (fs.existsSync(webmVideoFilePath)) {
 
         mailService.addLog('video type: webm', false);
         mailService.addLog('converting video', false);
-        spawnSync('ffmpeg', ['-fflags', '+genpts', '-i', webmVideoFilePath, '-r', '24', webmVideoConvertedFilePath]);
+        spawnSync('ffmpeg', ['-fflags', '+genpts', '-i', webmVideoFilePath, '-r', '24', webmVideoConvertedFilePath], {
+          timeout: 300000
+        });
 
       } else {
 
