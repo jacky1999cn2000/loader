@@ -67,7 +67,7 @@ module.exports = async(manifest) => {
     counter++;
 
     let videoId = video.videoId;
-    mailService.addLog('processing video', true);
+    mailService.addLog('processing video ' + counter, true);
     mailService.addLog('video id: ' + videoId, false);
 
     let mp4VideoFilePath = __dirname + '/../videos/' + videoId + '.mp4';
