@@ -87,7 +87,7 @@ module.exports = async(manifest) => {
     counter++;
 
     let videoId = video.videoId;
-    mailService.addLog('uploading video', true);
+    mailService.addLog('uploading video ' + counter, true);
     mailService.addLog('video id: ' + videoId, false);
 
     /*
