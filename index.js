@@ -5,11 +5,26 @@ let youtube = require('./process/youtube');
 
 async function execute() {
 
+  let appname = 'youtube-plowing';
+  let credentials = require('./config/credentials');
+  let selectedCredential;
+  credentials.forEach((credential) => {
+    if (credential.name == appname) {
+      selectedCredential = credential;
+    }
+  });
+
+  console.log('appname ', appname);
+  console.log('selectedCredential ', selectedCredential);
+  console.log('\n\r');
+
   let settings = require('./config/settings');
   console.log('settings ', settings);
   console.log('\n\r');
 
   let manifest = require('./config/' + settings.target);
+  manifest.credential = selectedCredential;
+
   console.log('manifest ', manifest);
   console.log('\n\r');
 
@@ -33,4 +48,4 @@ async function execute() {
 
 };
 
-execute();
+execute();;
