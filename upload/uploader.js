@@ -70,6 +70,7 @@ module.exports = async(manifest) => {
   mailService.addLog('unUploadedVideoList video list length: ' + unUploadedVideoList.length, true);
 
   let counter = 0;
+  let excludeArray = [];
 
   for (let video of videoList) {
 
@@ -85,6 +86,10 @@ module.exports = async(manifest) => {
       break;
     }
     counter++;
+
+    if (_.includes(excludeArray, counter)) {
+      continue;
+    }
 
     let videoId = video.videoId;
     mailService.addLog('uploading video ' + counter, true);
