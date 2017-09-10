@@ -70,7 +70,7 @@ module.exports = async(manifest) => {
   mailService.addLog('unUploadedVideoList video list length: ' + unUploadedVideoList.length, true);
 
   let counter = 0;
-  let excludeArray = [];
+  let excludeArray = _.range(0, 0);
 
   for (let video of videoList) {
 
@@ -107,8 +107,16 @@ module.exports = async(manifest) => {
 
     if (fs.existsSync(mp4VideoFilePath)) {
       uploadVideoFilePath = './videos/' + videoId + '-converted.webm';
+      if (!fs.existsSync(uploadVideoFilePath)) {
+        mailService.addLog('file did not exist, probably caused by process failure', false);
+        continue;
+      }
     } else {
       uploadVideoFilePath = './videos/' + videoId + '-converted.mp4';
+      if (!fs.existsSync(uploadVideoFilePath)) {
+        mailService.addLog('file did not exist, probably caused by process failure', false);
+        continue;
+      }
     }
 
     let uploadedVideoId = await youtubeService.upload(uploadVideoFilePath, video);
