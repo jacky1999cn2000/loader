@@ -1,2 +1,5 @@
 node_modules
 videos
+config
+.google-oauth2-credentials.json
+docker-compose.yml
