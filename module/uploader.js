@@ -45,9 +45,9 @@ module.exports = async(manifest) => {
   /*
     3. get video list, and upload each video
   */
-  let date = manifest.upload.date;
-  let filename = manifest.upload.file;
-  let batch = manifest.upload.batch;
+  let date = manifest.current.date;
+  let filename = manifest.current.file;
+  let batch = manifest.current.batch;
 
   let videoList = await s3Service.getVideoList(manifest.project.type, manifest.project.channelName, date, filename);
   let unUploadedVideoList = _.filter(videoList, (item) => {

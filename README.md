@@ -1,16 +1,13 @@
 # loader
 
-* code structure
-  * process (modularized logic for downloading and converting videos)
-    * youtube
-
-  * services (modularized logic for methods handling different tasks)
-    * youtube
-    * s3
-
-* configuration
-  * settings.json
+* steps
+  * change `target` and `task` in settings.json
     * target: indicate which manifest file to load for process
-    * task: indicate which task to perform (values: process or upload)
+    * task: indicate which task to perform (values: download, convert, watermark, crop or upload)
+
+  * to use watermark and crop, need to update the command in watermarker.js and cropper.js
+
+  * to upload, need to change the suffix (default is `converted`) in order to upload the correct video   
+
   * manifest files
     * [youtube](https://github.com/jacky1999cn2000/loader/blob/master/notes/youtube.md)

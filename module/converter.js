@@ -29,9 +29,9 @@ module.exports = async(manifest) => {
   /*
     1. get video list and convert the videos (if all videos have been converted, simply exit)
   */
-  let date = manifest.download.date;
-  let filename = manifest.download.file;
-  let batch = manifest.download.batch;
+  let date = manifest.current.date;
+  let filename = manifest.current.file;
+  let batch = manifest.current.batch;
 
   let videoList = await s3Service.getVideoList(manifest.project.type, manifest.project.channelName, date, filename);
   let unConvertedVideoList = _.filter(videoList, (item) => {

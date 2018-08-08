@@ -11,45 +11,38 @@
     * channelId: channelId for current project (only used in isTokenValid() method as a dummy parameter)
     * token_type: Bearer *(default)*  
     * expires_in: 3600 *(default)*
-    * client_id: google app client_id *(not used in this project)*
-    * client_secret: google app client_secret *(not used in this project)*
-    * access_token: access_token *(retrieved from Oauth Playground)*
-    * refresh_token:  refresh_token *(retrieved from Oauth Playground)*
-  * download
+    * client_id: google app client_id *(used in youtube-video-api authentication)*
+    * client_secret: google app client_secret *(used in youtube-video-api authentication)*
+    * apiKey: apiKey
+  * current
     * date: the date used to populate s3 file path
     * file: the file name to populate s3 file path
     * batch: how many items should be processed
-  * upload
-    * date: the date used to populate s3 file path
-    * file: the file name to populate s3 file path
-    * batch: how many items should be processed
+
   ```
   {
     "project": {
-      "email": "liang.zhao.sfdc01@gmail.com",
-      "channelUrl": "https://www.youtube.com/channel/project1",
-      "channelName": "project1",
-      "description": "this is a test project",
+      "email": "blueangel.yt1@gmail.com",
+      "channelUrl": "https://www.youtube.com/channel/UC70JN7kAPlgbAtqrV4wtPqg",
+      "channelName": "抖音精品收藏",
+      "description": "抖音精品收藏",
       "type": "youtube"
     },
     "credential": {
+      "name": "youtube-douyin",
+      "account": "blueangel.yt1@gmail.com",
       "token_type": "Bearer",
       "expires_in": 3600,
-      "refresh_token": "refresh_token",
-      "client_id": "client_id",
-      "client_secret": "client_secret",
-      "channelId": "channelId",
-      "access_token": "access_token"
+      "client_id": "299060033544-s484p2e63n0i454ajquoi7vid8upm62u.apps.googleusercontent.com",
+      "client_secret": "5ckCg__TTynzEpT1Y6MfrbwX",
+      "apiKey": "AIzaSyD2CBhn-lId1SMQx5uNVNo5oE_fyhFLhtw",
+      "channelId": "UC70JN7kAPlgbAtqrV4wtPqg"
     },
-    "download": {
-      "date": "2017-8-21",
+    "current": {
+      "date": "2018-8-8",
       "file": "1.json",
-      "batch": "8"
-    },
-    "upload": {
-      "date": "2017-8-21",
-      "file": "1.json",
-      "batch": "8"
+      "batch": "20"
     }
   }
+
   ```
