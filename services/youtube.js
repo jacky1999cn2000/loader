@@ -80,11 +80,9 @@ module.exports = {
     let options = {
       url: 'https://www.googleapis.com/youtube/v3/playlistItems',
       method: 'POST',
-      headers: {
-        Authorization: 'Bearer ' + credential.access_token
-      },
       qs: {
-        part: 'snippet'
+        part: 'snippet',
+        key: credential.apiKey
       },
       json: body
     };
