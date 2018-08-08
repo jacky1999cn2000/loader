@@ -1,4 +1,4 @@
 {
-  "target": "youtube/bzhan.json",
-  "task": "upload"
+  "target": "youtube/douyin.json",
+  "task": "download"
 }

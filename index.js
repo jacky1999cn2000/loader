@@ -1,11 +1,14 @@
 'use strict';
 
-let uploader = require('./upload/uploader');
-let youtube = require('./process/youtube');
+let downloader = require('./module/downloader');
+let converter = require('./module/converter');
+let watermarker = require('./module/watermarker');
+let cropper = require('./module/cropper');
+let uploader = require('./module/uploader');
 
 async function execute() {
 
-  let appname = 'youtube-plowing';
+  let appname = 'youtube-douyin';
   let credentials = require('./config/credentials');
   let selectedCredential;
   credentials.forEach((credential) => {
@@ -28,15 +31,27 @@ async function execute() {
   console.log('manifest ', manifest);
   console.log('\n\r');
 
-  if (settings.task == 'process') {
+  if (settings.task == 'download') {
 
     switch (manifest.project.type) {
       case 'youtube':
-        youtube(manifest);
+        downloader(manifest);
         break;
       default:
         console.log('unknown type: ', manifest.project.type);
     }
+
+  }else if (settings.task == 'convert') {
+
+    converter(manifest);
+
+  } else if (settings.task == 'watermark') {
+
+    watermarker(manifest);
+
+  } else if (settings.task == 'crop') {
+
+    cropper(manifest);
 
   } else if (settings.task == 'upload') {
 

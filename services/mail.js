@@ -32,11 +32,11 @@ module.exports = {
     }
   },
 
-  sendMail: () => {
+  sendMail: (task) => {
     let options = {
       from: process.env.EMAIL_ACCOUNT,
       to: 'liang.zhao83@gmail.com',
-      subject: 'JOB FINISHED',
+      subject: task,
       text: content
     };
 

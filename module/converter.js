@@ -27,33 +27,33 @@ module.exports = async(manifest) => {
   mailService.addLog('batch: ' + manifest.download.batch, false);
 
   /*
-    1. get video list and process the rest (if all videos have been processed, simply exit)
+    1. get video list and convert the videos (if all videos have been converted, simply exit)
   */
   let date = manifest.download.date;
   let filename = manifest.download.file;
   let batch = manifest.download.batch;
 
   let videoList = await s3Service.getVideoList(manifest.project.type, manifest.project.channelName, date, filename);
-  let unProcessedVideoList = _.filter(videoList, (item) => {
-    return !item.processed;
+  let unConvertedVideoList = _.filter(videoList, (item) => {
+    return !item.converted;
   });
 
-  if (unProcessedVideoList.length == 0) {
-    mailService.addLog('all videos in this file have been processed', true);
-    await mailService.sendMail();
+  if (unConvertedVideoList.length == 0) {
+    mailService.addLog('all videos in this file have been converted', true);
+    await mailService.sendMail('Convert task completed');
     process.exit();
   }
 
-  mailService.addLog('unprocessed video list length: ' + unProcessedVideoList.length, true);
+  mailService.addLog('unconverted video list length: ' + unConvertedVideoList.length, true);
 
   let counter = 0;
 
   for (let video of videoList) {
 
     /*
-      1.0 check if it was already processed
+      1.0 check if it was already converted
     */
-    if (video.process) {
+    if (video.converted) {
       continue;
     }
 
@@ -67,7 +67,7 @@ module.exports = async(manifest) => {
     counter++;
 
     let videoId = video.videoId;
-    mailService.addLog('processing video ' + counter, true);
+    mailService.addLog('converting video ' + counter, true);
     mailService.addLog('video id: ' + videoId, false);
 
     let mp4VideoFilePath = __dirname + '/../videos/' + videoId + '.mp4';
@@ -76,45 +76,11 @@ module.exports = async(manifest) => {
     let webmVideoFilePath = __dirname + '/../videos/' + videoId + '.webm';
     let webmVideoConvertedFilePath = __dirname + '/../videos/' + videoId + '-converted.mp4';
 
-    let downloadedSymbolFilePath = __dirname + '/../videos/' + videoId + '-downloaded.txt';
     let convertedSymbolFilePath = __dirname + '/../videos/' + videoId + '-converted.txt';
 
-    /*
-      1.2 download video
-
-      p.s. check if the file has already been downloaded (forever would resume nodejs after crash, so if the file has already downloaded, skip it)
-    */
-    if (fs.existsSync(downloadedSymbolFilePath)) {
-
-      mailService.addLog('already downloaded', false);
-
-    } else {
-
-      if (fs.existsSync(mp4VideoFilePath)) {
-
-        mailService.addLog('removing partially downloaded mp4 video ' + videoId, false);
-        fs.unlinkSync(mp4VideoFilePath);
-
-      }
-
-      if (fs.existsSync(webmVideoFilePath)) {
-
-        mailService.addLog('removing partially downloaded webm video ' + videoId, false);
-        fs.unlinkSync(webmVideoFilePath);
-
-      }
-
-      mailService.addLog('downloading video', false);
-      spawnSync('youtube-dl', ['-ci', '-f', 'best', '-o', 'videos/' + videoId + '.%(ext)s', 'https://www.youtube.com/watch?v=' + videoId]);
-
-      // create a dummy file to indicate this specific video was downloaded
-      fs.closeSync(fs.openSync(downloadedSymbolFilePath, 'w'));
-
-    }
-
 
     /*
-      1.3 convert video format
+      1.2 convert video
 
       p.s. check if the file has already been converted (forever would resume nodejs after crash, so if the file has already converted, skip it)
     */
@@ -135,6 +101,7 @@ module.exports = async(manifest) => {
 
         mailService.addLog('removing partially converted webm video ' + videoId, false);
         fs.unlinkSync(webmVideoConvertedFilePath);
+
       }
 
       if (fs.existsSync(mp4VideoFilePath)) {
@@ -165,18 +132,19 @@ module.exports = async(manifest) => {
     }
 
     /*
-      1.4 mark the video as processed
+      1.3 mark the video as converted
     */
-    video.processed = true;
+    video.converted = true;
 
   }
 
-  /*
-    4. removed the uploaded videos from video list, and overwrite the video list file in s3
-  */
   mailService.addLog('out of for loop', true);
   mailService.addLog('batch ' + batch, false);
   mailService.addLog('counter ' + counter, false);
+
+  /*
+    2. update video list in s3 after convert task completion
+  */
 
   mailService.addLog('writing new video list to s3 ', true);
 
@@ -185,6 +153,6 @@ module.exports = async(manifest) => {
     mailService.addLog('writing new video list to s3 failed', false, true);
   }
 
-  await mailService.sendMail();
+  await mailService.sendMail('Convert task completed');
 
 }

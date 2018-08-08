@@ -27,23 +27,10 @@ module.exports = async(manifest) => {
   mailService.addLog('batch: ' + manifest.upload.batch, false);
 
   /*
-    0. get credential from manifest, and write it to ./google-oauth2-credentials.json file (will be used for upload)
+    1. get credential from manifest, and write it to ./google-oauth2-credentials.json file (will be used for upload)
   */
   let credential = manifest.credential;
   jsonfile.writeFileSync('./.google-oauth2-credentials.json', credential);
-
-  /*
-    1. check if current access_token is still valid, if not, use refresh_token to get new access_token and write it to credential file
-  */
-  let isTokenValid = await youtubeService.isTokenValid(credential);
-  mailService.addLog('Is token valid: ' + isTokenValid, true);
-
-  if (!isTokenValid) {
-    let access_token = await youtubeService.refreshToken(credential);
-    credential.access_token = access_token;
-    jsonfile.writeFileSync('./.google-oauth2-credentials.json', credential);
-    mailService.addLog('refreshed token', true);
-  }
 
   /*
     2. authenticate, if failed, exit
@@ -51,7 +38,7 @@ module.exports = async(manifest) => {
   let authenticated = await youtubeService.authenticate(credential);
   if (!authenticated) {
     mailService.addLog('authenticate failed', true);
-    await mailService.sendMail();
+    await mailService.sendMail('Authenticate failed');
     process.exit();
   }
 
@@ -67,17 +54,23 @@ module.exports = async(manifest) => {
     return !item.uploaded;
   });
 
+  if (unUploadedVideoList.length == 0) {
+    mailService.addLog('all videos in this file have been uploaded', true);
+    await mailService.sendMail('Upload task completed');
+    process.exit();
+  }
+
   mailService.addLog('unUploadedVideoList video list length: ' + unUploadedVideoList.length, true);
 
   let counter = 0;
-  let excludeArray = _.range(0, 0);
+  let excludeArray = _.range(0, 0); //modify this array if want to skip certain video
 
   for (let video of videoList) {
 
     /*
-      3.0 check if the was not processed yet or already uploaded
+      3.0 check if the was already uploaded
     */
-    if (!video.processed || video.uploaded) {
+    if (video.uploaded) {
       continue;
     }
 
@@ -104,15 +97,16 @@ module.exports = async(manifest) => {
     let uploadedSymbolFilePath = __dirname + '/../videos/' + videoId + '-uploaded.txt';
 
     let uploadVideoFilePath;
+    let suffix = 'converted'; // moidfy this in order to designate which video to upload
 
     if (fs.existsSync(mp4VideoFilePath)) {
-      uploadVideoFilePath = './videos/' + videoId + '-converted.webm';
+      uploadVideoFilePath = './videos/' + videoId + '-' + suffix + '.webm';
       if (!fs.existsSync(uploadVideoFilePath)) {
         mailService.addLog('file did not exist, probably caused by process failure', false);
         continue;
       }
     } else {
-      uploadVideoFilePath = './videos/' + videoId + '-converted.mp4';
+      uploadVideoFilePath = './videos/' + videoId + '-' + suffix + '.mp4';
       if (!fs.existsSync(uploadVideoFilePath)) {
         mailService.addLog('file did not exist, probably caused by process failure', false);
         continue;
@@ -155,12 +149,13 @@ module.exports = async(manifest) => {
     }
   }
 
-  /*
-    4. removed the uploaded videos from video list, and overwrite the video list file in s3
-  */
   mailService.addLog('out of for loop', true);
   mailService.addLog('batch ' + batch, false);
   mailService.addLog('counter ' + counter, false);
+
+  /*
+    4. update video list in s3 after upload task completion
+  */
 
   mailService.addLog('writing new video list to s3 ', true);
 
@@ -169,6 +164,6 @@ module.exports = async(manifest) => {
     mailService.addLog('writing new video list to s3 failed', false, true);
   }
 
-  await mailService.sendMail();
+  await mailService.sendMail('Upload task completion');
 
 }
