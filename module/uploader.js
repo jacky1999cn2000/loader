@@ -150,8 +150,7 @@ module.exports = async(manifest) => {
     if (video.targetType == 'playlist') {
       mailService.addLog('adding video to playlist', false);
 
-      //let playlistAdded = await youtubeService.addToPlaylist(credential, video.targetId, uploadedVideoId);
-      let playlistAdded = await youtubeService.addToPlaylist(credential, 'PL11r9bvFKRgDJAa98lNRxaB013vD9-gwU', uploadedVideoId);
+      let playlistAdded = await youtubeService.addToPlaylist(credential, video.targetId, uploadedVideoId);
 
       if (!playlistAdded) {
         mailService.addLog('adding video to playlist failed', false, true);
