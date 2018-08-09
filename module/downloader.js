@@ -22,9 +22,9 @@ module.exports = async(manifest) => {
   mailService.addLog('channelName: ' + manifest.project.channelName, false);
   mailService.addLog('description: ' + manifest.project.description, false);
   mailService.addLog('type: ' + manifest.project.type, false);
-  mailService.addLog('file: ' + manifest.download.file, false);
-  mailService.addLog('date: ' + manifest.download.date, false);
-  mailService.addLog('batch: ' + manifest.download.batch, false);
+  mailService.addLog('file: ' + manifest.current.file, false);
+  mailService.addLog('date: ' + manifest.current.date, false);
+  mailService.addLog('batch: ' + manifest.current.batch, false);
 
   /*
     1. get video list and download the videos (if all videos have been downloaded, simply exit)

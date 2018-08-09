@@ -22,15 +22,28 @@ module.exports = async(manifest) => {
   mailService.addLog('channelName: ' + manifest.project.channelName, false);
   mailService.addLog('description: ' + manifest.project.description, false);
   mailService.addLog('type: ' + manifest.project.type, false);
-  mailService.addLog('file: ' + manifest.upload.file, false);
-  mailService.addLog('date: ' + manifest.upload.date, false);
-  mailService.addLog('batch: ' + manifest.upload.batch, false);
+  mailService.addLog('file: ' + manifest.current.file, false);
+  mailService.addLog('date: ' + manifest.current.date, false);
+  mailService.addLog('batch: ' + manifest.current.batch, false);
 
   /*
-    1. get credential from manifest, and write it to ./google-oauth2-credentials.json file (will be used for upload)
+    0. get credential from manifest, and write it to ./google-oauth2-credentials.json file (will be used for upload)
   */
   let credential = manifest.credential;
   jsonfile.writeFileSync('./.google-oauth2-credentials.json', credential);
+
+  /*
+    1. check if current access_token is still valid, if not, use refresh_token to get new access_token and write it to credential file
+  */
+  let isTokenValid = await youtubeService.isTokenValid(credential);
+  mailService.addLog('Is token valid: ' + isTokenValid, true);
+
+  if (!isTokenValid) {
+    let access_token = await youtubeService.refreshToken(credential);
+    credential.access_token = access_token;
+    jsonfile.writeFileSync('./.google-oauth2-credentials.json', credential);
+    mailService.addLog('refreshed token', true);
+  }
 
   /*
     2. authenticate, if failed, exit
@@ -137,7 +150,8 @@ module.exports = async(manifest) => {
     if (video.targetType == 'playlist') {
       mailService.addLog('adding video to playlist', false);
 
-      let playlistAdded = await youtubeService.addToPlaylist(credential, video.targetId, uploadedVideoId);
+      //let playlistAdded = await youtubeService.addToPlaylist(credential, video.targetId, uploadedVideoId);
+      let playlistAdded = await youtubeService.addToPlaylist(credential, 'PL11r9bvFKRgDJAa98lNRxaB013vD9-gwU', uploadedVideoId);
 
       if (!playlistAdded) {
         mailService.addLog('adding video to playlist failed', false, true);
