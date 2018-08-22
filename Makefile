@@ -12,7 +12,7 @@ run: install
 	docker-compose up
 
 bash:
-	docker run -it --rm -v `pwd`:/usr/src/app -w /usr/src/app --entrypoint="bash" node:8
+	docker run -it --rm -v `pwd`:/usr/src/app -w /usr/src/app --entrypoint="bash" loader_worker
 
 build_image: install version
 	$(info GIT_HASH: $(GIT_HASH))

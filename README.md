@@ -13,3 +13,7 @@
 
   * manifest files
     * [youtube](https://github.com/jacky1999cn2000/loader/blob/master/notes/youtube.md)
+
+* test new ffmpeg command
+  * run `make bash`
+  * go to `test` folder, and run test command such as `ffmpeg -i input.mp4 -vf "crop=505:in_h:388:0" output.webm`
