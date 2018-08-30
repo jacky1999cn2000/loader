@@ -126,9 +126,9 @@ module.exports = async(manifest) => {
       }
     }
 
-    let uploadedVideoId = await youtubeService.upload(uploadVideoFilePath, video);
+    let uploadedVideo = await youtubeService.upload(uploadVideoFilePath, video);
 
-    if (!uploadedVideoId) {
+    if (!uploadedVideo) {
       mailService.addLog('uploading video failed', false, true);
 
       // use 'break' instead of 'continue' since it might mean API quota was used up
@@ -136,13 +136,28 @@ module.exports = async(manifest) => {
       break;
     }
 
+    let uploadedVideoId = uploadedVideo.id;
+
     // create a dummy file to indicate this specific video was uploaded
     fs.closeSync(fs.openSync(uploadedSymbolFilePath, 'w'));
 
     /*
-      3.2 mark the video as uploaded
+      3.2 mark the video as uploaded, and update video's metadata - tags and localization
     */
     video.uploaded = true;
+    video.uploadedVideo = uploadedVideo;
+
+    mailService.addLog('updating video metadata - tags & localization', false);
+
+    let videoUpdated = await youtubeService.updateVideo(credential, video);
+
+    if (!videoUpdated) {
+      mailService.addLog('updating video metadata failed', false, true);
+
+      // use 'break' instead of 'continue' since it might mean API quota was used up
+      counter--;
+      break;
+    }
 
     /*
       3.3 if target type is playlist, then add the video to playlist

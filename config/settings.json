@@ -1,4 +1,4 @@
 {
   "target": "youtube/douyin.json",
-  "task": "download"
+  "task": "upload"
 }

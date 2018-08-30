@@ -108,7 +108,7 @@ module.exports = async(manifest) => {
 
         mailService.addLog('video type: mp4', false);
         mailService.addLog('converting video', false);
-        spawnSync('ffmpeg', ['-i', mp4VideoFilePath, '-c:v', 'libvpx-vp9', '-crf', '17', '-b:v', '0', mp4VideoConvertedFilePath], {
+        spawnSync('ffmpeg', ['-i', mp4VideoFilePath, '-c:v', 'libvpx-vp9', '-crf', '0', '-b:v', '0', mp4VideoConvertedFilePath], {
           timeout: 3600000
         });
 
@@ -116,7 +116,7 @@ module.exports = async(manifest) => {
 
         mailService.addLog('video type: webm', false);
         mailService.addLog('converting video', false);
-        spawnSync('ffmpeg', ['-i', webmVideoFilePath, '-c:v', 'libx264', '-crf', '17', webmVideoConvertedFilePath], {
+        spawnSync('ffmpeg', ['-i', webmVideoFilePath, '-c:v', 'libx264', '-crf', '0', webmVideoConvertedFilePath], {
           timeout: 3600000
         });
 

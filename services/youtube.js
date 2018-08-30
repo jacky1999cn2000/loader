@@ -126,7 +126,60 @@ module.exports = {
           console.log('upload err ', err);
           resolve(false);
         } else {
-          resolve(video.id);
+          resolve(video);
+        }
+      });
+    });
+
+    return p;
+  },
+
+  /*
+    update video's metadata - tags and localization
+  */
+  updateVideo: (credential, video) => {
+
+    let body = {
+        "id": video.uploadedVideo.id,
+        "snippet": {
+          "title": video.title,
+          "description": video.description,
+          "defaultLanguage": "zh",
+          "tags":video.tags.split(','),
+          "categoryId": "24"
+        },
+        "localizations":{
+          "en":{
+            "title": video.title_en,
+            "description": video.description_en
+          }
+        }
+      }
+
+    let options = {
+      url: 'https://www.googleapis.com/youtube/v3/videos',
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer ' + credential.access_token
+      },
+      qs: {
+        part: 'snippet,localizations'
+      },
+      json: body
+    };
+
+    let p = new Promise((resolve, reject) => {
+      request(options, (err, response, body) => {
+        if (err) {
+          console.log('request err ', err);
+          resolve(false);
+        } else {
+          let bodyString = JSON.stringify(response.body);
+          if (bodyString.indexOf('error') > -1) {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
         }
       });
     });
@@ -167,7 +220,7 @@ module.exports = {
           console.log('request err ', err);
           resolve(false);
         } else {
-          let bodyString = JSON.stringify(response.body); 
+          let bodyString = JSON.stringify(response.body);
           if (bodyString.indexOf('error') > -1) {
             resolve(false);
           } else {
